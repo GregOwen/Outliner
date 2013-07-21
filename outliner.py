@@ -8,6 +8,7 @@
 from Tkinter import *
 from tkFileDialog import *
 from collections import deque
+from operator import itemgetter
 import tkSimpleDialog
 import tkMessageBox
 import json
@@ -94,10 +95,7 @@ Please choose a valid Outliner file (.otln)"
         if self.filename is None:
             self.saveProjectAs()
         else:
-            # Sort notes in each topic
-            for topic in self.topics.values():
-                topic["notes"] = [node.widget.cget('text')
-                                  for node in topic["dndlist"].getOrdered()]
+            self.sortNotes()
 
             outfile = open(self.filename, 'w')
             outfile.write(json.dumps(self.noMoreNotes))
@@ -128,9 +126,26 @@ Please choose a valid Outliner file (.otln)"
         return None
 
     def exportOutline(self):
-        """ Create a new project. """
+        """ Create a .txt outline based off of the notes in the Outliner. """
         
-        print "exportOutline() called."
+        options = {}
+        options['defaultextension'] = '.txt'
+        options['filetypes'] = [('all files', '.*'), ('Text files', '.txt')]
+        options['title'] = 'Export your outline to a text file'
+        
+        exportFileName = asksaveasfilename(**options)
+
+        if exportFileName is not None:
+            self.sortNotes()
+
+            outfile = open(exportFileName, 'w')
+            # Write topics in the order given by their numbers
+            for topic in sorted(self.topics.values(), key=itemgetter('number')):
+                outfile.write(topic['name'] + ":\n")
+                for note in topic['notes']:
+                    outfile.write("\t" + note + "\n\n")
+                outfile.write("\n")
+            outfile.close()
 
     def quit(self):
         """ Quit the outliner. """
@@ -187,6 +202,14 @@ Please choose a valid Outliner file (.otln)"
         """ Display the previous note in the list. """
 
         print "prevNote() called."
+
+    def sortNotes(self):
+        """ Sort the notes in each topic according to the order in which they 
+            are currently arranged. """
+        
+        for topic in self.topics.values():
+            topic["notes"] = [node.widget.cget('text')
+                              for node in topic["dndlist"].getOrdered()]
 
 
 """ --------------------------------- main method ------------------------------- """
