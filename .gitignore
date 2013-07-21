@@ -1,3 +1,6 @@
+*.txt
+*.otln
+
 *.py[cod]
 
 # C extensions
