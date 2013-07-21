@@ -89,8 +89,8 @@ class OutlinerGUI:
             for the DNDList and the DNDList itself. """
 
         frame = Frame(self.root)
-        list = dndlist.DNDList(frame, self.defaultWidth, self.defaultHeight,
-                               items=topic["notes"])
+        list = dndlist.DNDList(frame, self.defaultWidth,
+                               self.defaultHeight - 100, items=topic["notes"])
 
         return (frame, list)
 
