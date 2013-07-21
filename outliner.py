@@ -1,10 +1,6 @@
 """
  "  File: outliner.py
  "  Written By: Gregory Owen
- "  Date: 24-12-2012 
- "  Last Modified: Sun Apr  7 02:10:09 2013
- "
- "  Execution: python outliner.py
  "
  "  Description: A graphical user interface for an outline generator.
 """ 

@@ -1,8 +1,6 @@
 """
  "  File: outlinermenu.py
  "  Written By: Gregory Owen
- "  Date: 31-01-2013 
- "  Last Modified: Thu Jan 31 23:33:59 2013
  "
  "  Description: Handles the menu for outlinergui.py
 """ 

@@ -1,8 +1,6 @@
 """
  "  File: outlinergui.py
  "  Written By: Gregory Owen
- "  Date: 31-01-2013 
- "  Last Modified: Sun Feb  3 10:18:28 2013
  "
  "  Description: The GUI manager for outliner
 """ 
