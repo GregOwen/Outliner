@@ -2,7 +2,7 @@
  "  File: outliner.py
  "  Written By: Gregory Owen
  "
- "  Description: A graphical user interface for an outline generator.
+ "  Description: An easy way to sythesize notes into an essay outline.
 """ 
 
 from Tkinter import *
@@ -20,7 +20,7 @@ Fields in a topic:
   name:    Subject of the topic, used to index into Outliner.topics (string)
   notes:   Notes in the topic (list of strings)
   number:  Number of topics created before this one (int)
-  button:  Button used to select topic (Tkinter.Button)
+  line:    Information line about the topic on the main screen (Tkinter.Frame)
   frame:   Frame containing this topic's dndlist (Tkinter.Frame)
   dndlist: DNDList containing this topic's notes (DNDList.dndlist)
 """
@@ -79,12 +79,12 @@ Please choose a valid Outliner file (.otln)"
 
         # Sort the topics by number
         sortedTopicNames = sorted(self.topics,
-                                  key=(lambda name: self.topics[name]["number"]))
+                                  key=(lambda name: self.topics[name]['number']))
         
         for name in sortedTopicNames:
             topic = self.topics[name]
-            topic["button"] = self.gui.newTopicButton(topic)
-            topic["frame"], topic["dndlist"] = self.gui.newTopicFrame(topic)
+            topic['line'] = self.gui.newTopicLine(topic)
+            topic['frame'], topic['dndlist'] = self.gui.newTopicFrame(topic)
             self.gui.menu.addToTopicLists(topic)
 
         projectFile.close()
@@ -95,6 +95,7 @@ Please choose a valid Outliner file (.otln)"
         if self.filename is None:
             self.saveProjectAs()
         else:
+            self.sortTopics()
             self.sortNotes()
 
             outfile = open(self.filename, 'w')
@@ -137,6 +138,7 @@ Please choose a valid Outliner file (.otln)"
 
         if exportFileName is not None:
             self.sortNotes()
+            self.sortTopics()
 
             outfile = open(exportFileName, 'w')
             # Write topics in the order given by their numbers
@@ -152,9 +154,8 @@ Please choose a valid Outliner file (.otln)"
 
         self.root.quit()
 
-    def newTopic(self, button=None):
-        """ Create a new topic. If a Button object is passed, associate that Button
-             with the new topic. Otherwise, create a new Button for the topic. """
+    def newTopic(self):
+        """ Create a new topic. """
 
         topicPrompt = "What would you like to call your new topic?"
         topicName = tkSimpleDialog.askstring("New Topic", topicPrompt)
@@ -169,11 +170,11 @@ Please choose a valid Outliner file (.otln)"
             return
 
         newTopic = {}
-        newTopic["name"] = topicName
-        newTopic["notes"] = []
-        newTopic["number"] = len(self.topics.keys())
-        newTopic["button"] = self.gui.newTopicButton(newTopic, button)
-        newTopic["frame"], newTopic["dndlist"] = self.gui.newTopicFrame(newTopic)
+        newTopic['name'] = topicName
+        newTopic['notes'] = []
+        newTopic['number'] = len(self.topics.keys())
+        newTopic['line'] = self.gui.newTopicLine(newTopic)
+        newTopic['frame'], newTopic['dndlist'] = self.gui.newTopicFrame(newTopic)
 
         self.topics[topicName] = newTopic
         self.gui.menu.addToTopicLists(newTopic)
@@ -183,9 +184,8 @@ Please choose a valid Outliner file (.otln)"
 
         if not self.noMoreNotes:
             note = self.noteText.get()
-            topic["notes"].append(note)
+            topic['notes'].append(note)
             self.gui.addNoteToGUI(topic, note)
-            self.gui.updateTopicGUI(topic)
             self.gui.displayNextNote()
 
     def viewTopic(self, topic):
@@ -208,9 +208,16 @@ Please choose a valid Outliner file (.otln)"
             are currently arranged. """
         
         for topic in self.topics.values():
-            topic["notes"] = [node.widget.cget('text')
-                              for node in topic["dndlist"].getOrdered()]
+            topic['notes'] = [node.widget.cget('text')
+                              for node in topic['dndlist'].getOrdered()]
+    def sortTopics(self):
+        """ Assign numbers to topics according to the order in which they are
+            currently arranged. """
 
+        ordered = self.gui.topicList.getOrdered()
+        for i in range(len(ordered)):
+            topic = ordered[i].widget.topic
+            topic['number'] = i
 
 """ --------------------------------- main method ------------------------------- """
 
