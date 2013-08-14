@@ -125,7 +125,7 @@ class OutlinerGUI:
             topics, and returns it. """
 
         line = TopicLine(topic, self.outliner, width=(self.defaultWidth - 100),
-                         relief=RAISED, borderwidth=2)
+                         height=30, relief=RAISED, borderwidth=2)
         self.topicList.addItem(line)
         return line
 

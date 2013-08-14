@@ -176,8 +176,8 @@ Please choose a valid Outliner file (.otln)"
         newTopic['line'] = self.gui.newTopicLine(newTopic)
         newTopic['frame'], newTopic['dndlist'] = self.gui.newTopicFrame(newTopic)
 
-        self.topics[topicName] = newTopic
         self.gui.menu.addToTopicLists(newTopic)
+        self.topics[topicName] = newTopic
 
     def addNoteToTopic(self, topic):
         """ Add the currently-displayed note to the topic. """
