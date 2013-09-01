@@ -165,31 +165,25 @@ class OutlinerGUI:
 
         noteFrame = Frame(self.root, relief=RAISED, borderwidth=2)
 
-        self.outliner.noteText = StringVar()
-        self.noteLabel = Label(noteFrame, textvariable=self.outliner.noteText,
+        self.noteText = StringVar()
+        self.noteLabel = Label(noteFrame, textvariable=self.noteText,
                 height=5, width=80)
 
         noNotes = "No notes. Open an existing project or create a new one to" +\
             " import notes."
-        self.outliner.noteText.set(noNotes)
+        self.noteText.set(noNotes)
 
         self.noteLabel.pack(side=BOTTOM, expand=YES)
 
         return noteFrame
 
     def displayNextNote(self):
-        """ Display the next note in the list. """
+        """ Display the first note in the list. """
 
-        note = ""
-
-        while (len(self.outliner.notes) > 0 and note.strip() == ""):
-            note = self.outliner.notes.popleft()
-
-        if (note.strip() == ""):
-            self.outliner.noMoreNotes = True
-            self.outliner.noteText.set("No more notes")
+        if len(self.outliner.notes) > 0:
+            self.noteText.set(self.outliner.notes[0])
         else:
-            self.outliner.noteText.set(note)
+            self.noteText.set("No more notes.")
 
     """ -------------------------------------------------------------------- """
     """                         Return Frame methods                         """

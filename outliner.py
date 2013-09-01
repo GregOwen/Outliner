@@ -2,7 +2,7 @@
  "  File: outliner.py
  "  Written By: Gregory Owen
  "
- "  Description: An easy way to sythesize notes into an essay outline.
+ "  Description: An easy way to synthesize notes into an essay outline.
 """ 
 
 from Tkinter import *
@@ -32,7 +32,6 @@ class Outliner():
         self.filename = None
         self.topics = {}
         self.notes = deque()
-        self.noMoreNotes = True
 
         self.gui = OutlinerGUI(self)
 
@@ -43,10 +42,12 @@ class Outliner():
 
         if notepath is not None:
             notefile = open(notepath, 'r')
-            self.notes = deque(notefile.read().strip().split("\n"))
+            self.notes = deque()
+            
+            for note in notefile.read().strip().split("\n"):
+                if note != "":
+                    self.notes.append(note)
 
-            if len(self.notes) > 0:
-                self.noMoreNotes = False
             self.gui.displayNextNote()
 
     def openProject(self):
@@ -65,17 +66,15 @@ Please choose a valid Outliner file (.otln)"
         self.filename = projectPath
         projectFile = open(projectPath, 'r')
 
-        noMoreNotes = projectFile.readline()
-        self.noMoreNotes = json.loads(noMoreNotes)
-
-        currNote = projectFile.readline()
-        self.noteText.set(json.loads(currNote))
-        
         noteList = projectFile.readline()
         self.notes = deque(json.loads(noteList))
 
         topicDict = projectFile.readline()
         self.topics = json.loads(topicDict)
+
+        projectFile.close()
+
+        self.gui.displayNextNote()
 
         # Sort the topics by number
         sortedTopicNames = sorted(self.topics,
@@ -87,8 +86,6 @@ Please choose a valid Outliner file (.otln)"
             topic['frame'], topic['dndlist'] = self.gui.newTopicFrame(topic)
             self.gui.menu.addToTopicLists(topic)
 
-        projectFile.close()
-
     def saveProject(self):
         """ Save the current state of the project. """
         
@@ -99,10 +96,6 @@ Please choose a valid Outliner file (.otln)"
             self.sortNotes()
 
             outfile = open(self.filename, 'w')
-            outfile.write(json.dumps(self.noMoreNotes))
-            outfile.write("\n")
-            outfile.write(json.dumps(self.noteText.get()))
-            outfile.write("\n")
             outfile.write(json.dumps(list(self.notes)))
             outfile.write("\n")
             outfile.write(json.dumps(self.topics, default=self.handleJSON))
@@ -182,8 +175,8 @@ Please choose a valid Outliner file (.otln)"
     def addNoteToTopic(self, topic):
         """ Add the currently-displayed note to the topic. """
 
-        if not self.noMoreNotes:
-            note = self.noteText.get()
+        if len(self.notes) > 0:
+            note = self.notes.popleft()
             topic['notes'].append(note)
             self.gui.addNoteToGUI(topic, note)
             self.gui.displayNextNote()
@@ -196,12 +189,16 @@ Please choose a valid Outliner file (.otln)"
     def nextNote(self):
         """ Display the next note in the list. """
 
-        print "nextNote() called."
+        if len(self.notes) > 0:
+            self.notes.append(self.notes.popleft())
+            self.gui.displayNextNote()
 
     def prevNote(self):
-        """ Display the previous note in the list. """
+        """ Display the last note in the list. """
 
-        print "prevNote() called."
+        if len(self.notes) > 0:
+            self.notes.appendleft(self.notes.pop())
+            self.gui.displayNextNote()
 
     def sortNotes(self):
         """ Sort the notes in each topic according to the order in which they 
