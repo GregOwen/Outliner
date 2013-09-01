@@ -104,7 +104,7 @@ class OutlinerGUI:
 
         topicFrame = Frame(self.root)
         self.topicList = dndlist.DNDList(topicFrame, self.defaultWidth,
-                                         self.defaultHeight - 100)
+                                         self.defaultHeight - 200)
 
         return topicFrame
 
@@ -163,17 +163,28 @@ class OutlinerGUI:
     def makeNoteFrame(self):
         """ Make and deploy the note frame. """
 
-        noteFrame = Frame(self.root, relief=RAISED, borderwidth=2)
+        noteFrame = Frame(self.root, height=60, relief=RAISED, borderwidth=2)
 
         self.noteText = StringVar()
-        self.noteLabel = Label(noteFrame, textvariable=self.noteText,
-                height=5, width=80)
+
+        noteLabelArgs = {'textvariable': self.noteText,
+                         'height': 5, 'width': 80, 'justify': LEFT,
+                         'wraplength': self.defaultWidth - 100}
+        self.noteLabel = Label(noteFrame, **noteLabelArgs)
 
         noNotes = "No notes. Open an existing project or create a new one to" +\
             " import notes."
         self.noteText.set(noNotes)
 
-        self.noteLabel.pack(side=BOTTOM, expand=YES)
+        self.noteLabel.pack(side=LEFT, expand=YES)
+
+        nextButton = Button(noteFrame, text="Next") 
+        nextButton.config(command=(lambda: self.outliner.nextNote()))
+        nextButton.pack(side=TOP)
+
+        prevButton = Button(noteFrame, text="Prev") 
+        prevButton.config(command=(lambda: self.outliner.prevNote()))
+        prevButton.pack(side=BOTTOM)
 
         return noteFrame
 
