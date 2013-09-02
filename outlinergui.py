@@ -2,12 +2,13 @@
  "  File: outlinergui.py
  "  Written By: Gregory Owen
  "
- "  Description: The GUI manager for outliner
+ "  The GUI manager (view) for the Outliner
 """ 
 
 from Tkinter import *
-from outlinermenu import OutlinerMenu
 
+from outlinermenu import OutlinerMenu
+from outlinermodel import OutlinerModel
 import dndlist
 
 class TopicLine(Frame):
@@ -51,10 +52,11 @@ class TopicLine(Frame):
 
 class OutlinerGUI:
 
-    def __init__(self, ol=None):
+    def __init__(self, master, outliner, model):
 
-        self.outliner = ol
-        self.root = self.outliner.root
+        self.root = master
+        self.outliner = outliner
+        self.model = model
 
         self.root.title("The Outliner, by Gregory Owen")
         self.defaultWidth = 700
@@ -63,7 +65,7 @@ class OutlinerGUI:
         geoString = str(self.defaultWidth) + "x" + str(self.defaultHeight)
         self.root.geometry(geoString)
 
-        self.menu = OutlinerMenu(self.outliner) 
+        self.menu = OutlinerMenu(self.outliner, self.root) 
         self.topicFrame = self.upperFrame = self.makeTopicFrame()
         self.noteFrame = self.lowerFrame = self.makeNoteFrame()
         self.packFrames()
@@ -73,6 +75,18 @@ class OutlinerGUI:
     """ -------------------------------------------------------------------- """
     """                            General methods                           """
     """ -------------------------------------------------------------------- """
+
+    def openGUI(self):
+        """ Initialize the GUI from a previous project. """
+
+        # Sort the topics by number
+        sortedTopicNames = sorted(self.model.topics,
+                                  key=(lambda name:
+                                           self.model.topics[name]['number']))
+        
+        for name in sortedTopicNames:
+            topic = self.model.topics[name]
+            self.initializeTopicGUI(topic)
 
     def packFrames(self):
         """ Pack self.upperFrame above self.lowerFrame. """
@@ -99,6 +113,13 @@ class OutlinerGUI:
 
         return label
 
+    def initializeTopicGUI(self, topic):
+        """ Initialize the GUI components related to the given topic. """
+
+        topic['line'] = self.newTopicLine(topic)
+        topic['frame'], topic['dndlist'] = self.newTopicFrame(topic)
+        self.menu.addToTopicLists(topic)
+
     def makeTopicFrame(self):
         """ Make the topic frame, including a DNDList to hold topic lines. """
 
@@ -116,7 +137,7 @@ class OutlinerGUI:
         frame = Frame(self.root)
         labels = [self.createNoteLabel(n) for n in topic['notes']]
         dndl = dndlist.DNDList(frame, self.defaultWidth,
-                               self.defaultHeight - 100, items=labels)
+                               self.defaultHeight - 200, items=labels)
 
         return (frame, dndl)
 
@@ -128,14 +149,6 @@ class OutlinerGUI:
                          height=30, relief=RAISED, borderwidth=2)
         self.topicList.addItem(line)
         return line
-
-    def topicAlreadyExists(self):
-        """ Report to the user that there is already a topic with the name that
-            they entered. """
-
-        errorprompt = "I'm sorry, but a topic by that name already exists in" +\
-" this outline.\nPlease select a different name."
-        tkMessageBox.showerror("Error: Topic Already Exists", errorprompt)
 
     def viewTopic(self, topic):
         """ Display the notes that are part of the topic. """
@@ -191,8 +204,8 @@ class OutlinerGUI:
     def displayNextNote(self):
         """ Display the first note in the list. """
 
-        if len(self.outliner.notes) > 0:
-            self.noteText.set(self.outliner.notes[0])
+        if len(self.outliner.model.notes) > 0:
+            self.noteText.set(self.outliner.model.notes[0])
         else:
             self.noteText.set("No more notes.")
 
