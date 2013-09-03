@@ -11,12 +11,13 @@ import json
 
 """
 Fields in a topic:
+  dndlist: DNDList containing this topic's notes (DNDList.dndlist)
+  frame:   Frame containing this topic's dndlist (Tkinter.Frame)
+  line:    Information line about the topic on the main screen (Tkinter.Frame)
   name:    Subject of the topic, used to index into Outliner.topics (string)
   notes:   Notes in the topic (list of strings)
   number:  Number of topics created before this one (int)
-  line:    Information line about the topic on the main screen (Tkinter.Frame)
-  frame:   Frame containing this topic's dndlist (Tkinter.Frame)
-  dndlist: DNDList containing this topic's notes (DNDList.dndlist)
+  rframe:  Frame into which notes are dragged to be removed (Tkinter.Frame)
 """
 
 class OutlinerModel():
