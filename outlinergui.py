@@ -66,11 +66,13 @@ class OutlinerGUI:
         self.root.geometry(geoString)
 
         self.menu = OutlinerMenu(self.outliner, self.root) 
-        self.topicFrame = self.upperFrame = self.makeTopicFrame()
+        self.essayFrame = self.upperFrame = self.makeEssayFrame()
         self.noteFrame = self.lowerFrame = self.makeNoteFrame()
         self.packFrames()
 
         self.makeReturnFrame()
+        self.currTopic = None
+        self.dragNote = None
 
     """ -------------------------------------------------------------------- """
     """                            General methods                           """
@@ -101,11 +103,32 @@ class OutlinerGUI:
         self.lowerFrame.pack_forget()
 
     """ -------------------------------------------------------------------- """
+    """                          Essay Frame methods                         """
+    """ -------------------------------------------------------------------- """
+
+    def makeEssayFrame(self):
+        """ Make the essay frame, including a DNDList to hold topic lines. """
+
+        essayFrame = Frame(self.root)
+        self.topicList = dndlist.DNDList(essayFrame, self.defaultWidth,
+                                         self.defaultHeight - 200)
+
+        return essayFrame
+
+    """ -------------------------------------------------------------------- """
     """                          Topic Frame methods                         """
     """ -------------------------------------------------------------------- """
 
+    def addNoteToGUI(self, topic, note):
+        """ Add note to the DNDList of the given topic. """
+
+        node = topic['dndlist'].addItem(self.createNoteLabel(note))
+        node.widget.bind("<Button-1>", self.onClick, add='+')
+        node.widget.bind("<B1-Motion>", self.onMotion, add='+')
+        node.widget.bind("<ButtonRelease-1>", self.onRelease, add='+')
+
     def createNoteLabel(self, text):
-        """ Creates a label with the given text to be added to a DNDList. """
+        """ Create a label with the given text to be added to a DNDList. """
 
         args = {"wraplength": self.defaultWidth - 200, "relief": RAISED,
                 "borderwidth": 2}
@@ -117,57 +140,103 @@ class OutlinerGUI:
         """ Initialize the GUI components related to the given topic. """
 
         topic['line'] = self.newTopicLine(topic)
-        topic['frame'], topic['dndlist'] = self.newTopicFrame(topic)
+        self.newTopicFrame(topic)
         self.menu.addToTopicLists(topic)
 
-    def makeTopicFrame(self):
-        """ Make the topic frame, including a DNDList to hold topic lines. """
-
-        topicFrame = Frame(self.root)
-        self.topicList = dndlist.DNDList(topicFrame, self.defaultWidth,
-                                         self.defaultHeight - 200)
-
-        return topicFrame
-
     def newTopicFrame(self, topic):
-        """ Creates a new dndlist for the given topic and populates it with the
-            topic's notes (if any). Returns a tuple containing the parent frame
-            for the DNDList and the DNDList itself. """
+        """ Create a new dndlist for the given topic and populate it with the
+            topic's notes (if any). """
 
         frame = Frame(self.root)
-        labels = [self.createNoteLabel(n) for n in topic['notes']]
-        dndl = dndlist.DNDList(frame, self.defaultWidth,
-                               self.defaultHeight - 200, items=labels)
+        
+        removeFrame = Frame(frame, width=self.defaultWidth, height=30,
+                            relief=SOLID, borderwidth=2)
+        removeLabel = Label(removeFrame,
+                            text="Drag note here to remove from topic")
 
-        return (frame, dndl)
+        removeLabel.pack()
+        removeFrame.pack(side=TOP, fill=X)
+        
+        dndl = dndlist.DNDList(frame, self.defaultWidth, 
+                               self.defaultHeight - 120)
+
+        topic['frame'] = frame
+        topic['rframe'] = removeFrame
+        topic['dndlist'] = dndl
+        
+        for note in topic['notes']:
+            self.addNoteToGUI(topic, note)
 
     def newTopicLine(self, topic):
-        """ Creates a new line for the given topic, adds it to the dndlist of 
-            topics, and returns it. """
+        """ Create a new line for the given topic, add it to the dndlist of 
+            topics, and return it. """
 
         line = TopicLine(topic, self.outliner, width=(self.defaultWidth - 100),
                          height=30, relief=RAISED, borderwidth=2)
         self.topicList.addItem(line)
         return line
 
-    def viewTopic(self, topic):
-        """ Display the notes that are part of the topic. """
+    def onClick(self, event):
+        """ When an item on the canvas is clicked, store that item's id. """
 
-        self.unpackFrames()
-        self.upperFrame = topic['frame']
-        self.lowerFrame = self.returnFrame
-        self.packFrames()
+        x, y = self.currTopic['dndlist'].getClickCoords()
+        self.dragNote = self.currTopic['dndlist'].canvas.find_closest(x, y)[0]
+
+    def onMotion(self, event):
+        """ Change the color of the text in the current topic's remove frame
+            when an object is dragged into that frame. Assumes that the remove
+            frame is located immediately above the canvas. """
+
+        if self.dragNote is not None:
+            x, y = self.currTopic['dndlist'].getClickCoords()
+            label = self.currTopic['rframe'].winfo_children()[0]
+            
+            if y < 0 and label.cget('fg') != "red":                
+                label.config(fg="red")
+            if y > 0 and label.cget('fg') == "red":
+                label.config(fg="black")
+
+    def onRelease(self, event):
+        """ When an item on the canvas is released, check if the mouse is over
+            the remove from topic frame. If it is, remove the selected note from
+            the topic. Assumes that the remove frame is located immediately
+            above the canvas. """
+
+        x, y = self.currTopic['dndlist'].getClickCoords()
+
+        # if the mouse is currently in the remove frame
+        if y < 0:
+            self.removeNoteFromTopic(self.currTopic, self.dragNote)
+            self.currTopic['rframe'].winfo_children()[0].config(fg="black")
+
+        self.dragNote = None
+
+    def removeNoteFromTopic(self, topic, noteid):
+        """ Remove the note with the given id from the given topic. Push the
+            text of the note onto the left of the note deque. """
+
+        text = topic['dndlist'].getItem(noteid).widget.cget('text')
+
+        topic['dndlist'].removeItem(noteid)
+        topic['notes'].remove(text)
+
+        self.model.notes.appendleft(text)
+        self.updateTopicGUI(topic)
+        self.displayNextNote()
 
     def updateTopicGUI(self, topic):
         """ Update all GUI components relating to the given topic. """
 
         topic['line'].updateLabel()
 
-    def addNoteToGUI(self, topic, note):
-        """ Add note to the DNDList of the given topic. """
+    def viewTopic(self, topic):
+        """ Display the notes that are part of the topic. """
 
-        topic['dndlist'].addItem(self.createNoteLabel(note))
-        self.updateTopicGUI(topic)
+        self.currTopic = topic
+        self.unpackFrames()
+        self.upperFrame = topic['frame']
+        self.lowerFrame = self.returnFrame
+        self.packFrames()
 
     """ -------------------------------------------------------------------- """
     """                          Note Frame methods                          """
@@ -216,7 +285,8 @@ class OutlinerGUI:
     def makeReturnFrame(self):
         """ Make the return frame, but do not deploy it. """
 
-        self.returnFrame = Frame(self.root, relief=RAISED, borderwidth=2)
+        self.returnFrame = Frame(self.root, height=30, relief=RAISED,
+                                 borderwidth=2)
         self.returnButton = Button(self.returnFrame,
                                    text="Return to essay view",
                                    command=self.returnToMain)
@@ -225,7 +295,8 @@ class OutlinerGUI:
     def returnToMain(self):
         """ Return to the main (essay) view. """
 
+        self.currTopic = None
         self.unpackFrames()
-        self.upperFrame = self.topicFrame 
+        self.upperFrame = self.essayFrame 
         self.lowerFrame = self.noteFrame
         self.packFrames()
