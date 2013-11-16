@@ -158,7 +158,7 @@ class OutlinerGUI:
         removeFrame.pack(side=TOP, fill=X)
         
         dndl = dndlist.DNDList(frame, self.defaultWidth, 
-                               self.defaultHeight - 120)
+                               self.defaultHeight - 130)
 
         topic['frame'] = frame
         topic['rframe'] = removeFrame
@@ -285,7 +285,7 @@ class OutlinerGUI:
     def makeReturnFrame(self):
         """ Make the return frame, but do not deploy it. """
 
-        self.returnFrame = Frame(self.root, height=30, relief=RAISED,
+        self.returnFrame = Frame(self.root, height=200, relief=RAISED,
                                  borderwidth=2)
         self.returnButton = Button(self.returnFrame,
                                    text="Return to essay view",
