@@ -250,7 +250,7 @@ class OutlinerGUI:
         self.noteText = StringVar()
 
         noteLabelArgs = {'textvariable': self.noteText,
-                         'height': 5, 'width': 80, 'justify': LEFT,
+                         'height': 6, 'width': 80, 'justify': LEFT,
                          'wraplength': self.defaultWidth - 100}
         self.noteLabel = Label(noteFrame, **noteLabelArgs)
 

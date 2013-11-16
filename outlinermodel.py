@@ -33,9 +33,9 @@ class OutlinerModel():
 
         try:
             notefile = open(notepath, 'r')            
-            for note in notefile.read().strip().split("\n"):
+            for note in notefile.read().strip().split("\n\n"):
                 if note != "":
-                    self.notes.append(note)
+                    self.notes.append(" ".join(note.split("\n")))
         except IOError:
             print "Error: no such file"
 
